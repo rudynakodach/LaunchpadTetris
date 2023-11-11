@@ -40,7 +40,7 @@ public class Main {
         int[] columnEmptiness = calculateColumnEmptiness(map);
 
         // Calculate total emptiness to use as the range for random number generation
-        int totalEmptiness = 0;
+        int totalEmptiness = 9;
         for (int emptiness : columnEmptiness) {
             totalEmptiness += emptiness;
         }
@@ -53,7 +53,7 @@ public class Main {
         int cumulativeEmptiness = 0;
         for (int col = 0; col < 9; col++) {
             cumulativeEmptiness += columnEmptiness[col];
-            if (randomNumber < cumulativeEmptiness) {
+            if (randomNumber < cumulativeEmptiness + 9) {
                 return col;
             }
         }
@@ -107,7 +107,6 @@ public class Main {
     }
 
     private static boolean containsFullRows(Block[][] map) {
-//        log(map);
         for (int y = 0; y < 9; y++) {
             boolean isFull = true;
             for (int x = 0; x < 9; x++) {
@@ -123,6 +122,21 @@ public class Main {
         return false;
     }
 
+    private static int containsFullColumns(Block[][] map) {
+        for (int x = 0; x < map.length; x++) {
+            boolean isColumnFull = true;
+            for (int y = 0; y < map[x].length; y++) {
+                if (map[y][x] == null) {
+                    isColumnFull = false;
+                    break;
+                }
+            }
+            if(isColumnFull) {
+                return x;
+            }
+        }
+        return -1;
+    }
 
     private static void removeFullRows(Block[][] map, Launchpad launchpad) throws InvalidMidiDataException, MidiUnavailableException, InterruptedException {
         Collection<Byte> message = new ArrayList<>();
@@ -170,7 +184,7 @@ public class Main {
     private static void tetrisLoop(Launchpad launchpad) throws MidiUnavailableException, InvalidMidiDataException, InterruptedException {
         LaunchpadColor[] colors = {LaunchpadColor.CYAN, LaunchpadColor.ORANGE, LaunchpadColor.PURPLE, LaunchpadColor.PINK, LaunchpadColor.GREEN, LaunchpadColor.RED};
 
-        final long TICK_DELAY = 100;
+        final long TICK_DELAY = 25;
         Block[][] map = new Block[9][9];
 
         for (Block[] blocks : map) {
@@ -210,6 +224,14 @@ public class Main {
 
                     Thread.sleep(TICK_DELAY);
                 } while(floatingCellsExist(map));
+
+                if(containsFullColumns(map) >= 0) {
+                    for (Block[] blocks : map) {
+                        Arrays.fill(blocks, null);
+                    }
+                    recolorLaunchpad(launchpad, map);
+                }
+                Thread.sleep(TICK_DELAY);
             }
         }
     }
